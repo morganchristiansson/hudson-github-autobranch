@@ -100,7 +100,9 @@ class Hudhub
     # Update the name and data for the given branch name
     def update_branch!(branch)
       self.name = Job.name_for_branch(self.name, branch)
-      self.data.gsub!(/<name>[^<]+/, "<name>#{branch}")
+      xml = REXML::Document.new(self.data)
+      REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text = REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text.gsub /template/, branch
+      self.data = xml.to_s
 
       self
     end
