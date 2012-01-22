@@ -11,8 +11,72 @@ describe Hudhub::Job do
     Hudhub::Job::Http.stub!(:post) { response_200 }
   end
 
-  let(:base_job) { Hudhub::Job.new('my_project_master_rspec', 'RANDOM_XML_<name>master</name>_MORE_RANDOM_XML')}
-  let(:job) { Hudhub::Job.new('my_project_new-branch_rspec', 'RANDOM_XML_<name>new-branch</name>_MORE_RANDOM_XML')}
+  let :base_job do
+    Hudhub::Job.new('my_project_master_rspec', <<-XML)
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <logRotator>
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>50</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty>
+      <projectUrl>https://github.com/versapay/hudson-github-autobranch/</projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <hudson.queueSorter.PrioritySorterJobProperty>
+      <priority>100</priority>
+    </hudson.queueSorter.PrioritySorterJobProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <name>origin</name>
+        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+        <url>git://github.com/versapay/hudson-github-autobranch.git</url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>origin/template</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <recursiveSubmodules>false</recursiveSubmodules>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <authorOrCommitter>false</authorOrCommitter>
+    <clean>false</clean>
+    <wipeOutWorkspace>false</wipeOutWorkspace>
+    <pruneBranches>false</pruneBranches>
+    <remotePoll>false</remotePoll>
+    <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+    <gitTool>Default</gitTool>
+    <submoduleCfg class="list"/>
+    <relativeTargetDir></relativeTargetDir>
+    <excludedRegions></excludedRegions>
+    <excludedUsers></excludedUsers>
+    <gitConfigName></gitConfigName>
+    <gitConfigEmail></gitConfigEmail>
+    <skipTag>false</skipTag>
+    <scmName></scmName>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers class="vector"/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers/>
+  <buildWrappers/>
+</project>
+    XML
+  end
+  let :job { Hudhub::Job.copy!(base_job, 'new-branch') }
 
   describe "#name_for_branch" do
     context "when my-project-master-rspec" do
@@ -30,7 +94,10 @@ describe Hudhub::Job do
       subject { base_job.update_branch!('new-branch')}
 
       its(:name) { should == 'my_project_new-branch_rspec'}
-      its(:data) { should == 'RANDOM_XML_<name>new-branch</name>_MORE_RANDOM_XML' }
+      it "has the correct name" do
+        xml = REXML::Document.new(subject.data)
+        REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text.should == 'origin/new-branch'
+      end
     end
   end
 
@@ -56,14 +123,17 @@ describe Hudhub::Job do
     it "should create a job based on the base one" do
       Hudhub::Job::Http.should_receive(:post).
         with("/createItem?name=my_project_new-branch_rspec",
-             {:body=>"RANDOM_XML_<name>new-branch</name>_MORE_RANDOM_XML"}) { response_200 }
+             {:body=>job.data}) { response_200 }
       Hudhub::Job.copy!(base_job, 'new-branch')
     end
     describe "the job returned" do
       subject { Hudhub::Job.copy!(base_job, 'new-branch')}
 
       its(:name) { should == 'my_project_new-branch_rspec' }
-      its(:data) { should == 'RANDOM_XML_<name>new-branch</name>_MORE_RANDOM_XML' }
+      it "has the correct name" do
+        xml = REXML::Document.new(subject.data)
+        REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text.should == 'origin/new-branch'
+      end
     end
   end
 
@@ -73,6 +143,6 @@ describe Hudhub::Job do
         with("/job/my_project_old-branch_rspec/doDelete")
       Hudhub::Job.delete!(base_job.name, 'old-branch')
     end
-
   end
 end
+
