@@ -75,7 +75,7 @@ class Hudhub
         base_name.gsub("master", branch)
       else
         "#{base_name}-#{branch}"
-      end
+      end.gsub(%r{[/]}, '-')
     end
 
     attr_accessor :name, :data
