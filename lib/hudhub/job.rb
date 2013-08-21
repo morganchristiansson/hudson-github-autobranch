@@ -39,7 +39,7 @@ class Hudhub
         raise AuthenticationFailed
       else
         log "Error while getting '#{url}'"
-        raise response.response
+        raise response.response.to_s
       end
     end
 
@@ -55,7 +55,7 @@ class Hudhub
       unless response.code == 200
         log "Error while posting '#{url}'"
         log response.parsed_response
-        raise response.response
+        raise response.response.to_s
       end
 
       job
@@ -85,13 +85,13 @@ class Hudhub
       url = "/job/#{name}/build"
 
       begin
-        response = Http.get(url)
+        response = Http.post(url)
         case response.code
-        when 200
+        when 200, 201
           true
         else
           log "Error while getting '#{url}'"
-          raise response.response
+          raise response.response.to_s
         end
       rescue Timeout::Error
         log "Timeout... That could happen on heroku deployment. The job should be running however."
