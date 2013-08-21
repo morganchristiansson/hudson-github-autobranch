@@ -1,7 +1,6 @@
-# Set your own token and setup Github to post to /YOUR_TOKEN
-github_token: 1234ABCD
-
 # Your hudson server url
+server_ip: hudson.your-organization.com
+server_port: 8080
 hudson_url: http://hudson.your-organization.com
 
 # The base hudson job. The configuration will be copy from it.
