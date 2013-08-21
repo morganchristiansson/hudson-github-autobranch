@@ -45,9 +45,13 @@ class Hudhub
     raise InvalidGithubToken unless @github_token == config.github_token
     log "github token is valid"
   end
-
 end
 
 %w(exceptions config job).each do |file|
   require File.join(File.dirname(__FILE__), 'hudhub', file)
 end
+
+def log(msg)
+  puts msg
+end
+
