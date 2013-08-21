@@ -1,3 +1,5 @@
+require "rexml/document"
+
 class Hudhub
   class Job
     class Http
