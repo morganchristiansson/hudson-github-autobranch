@@ -1,9 +1,9 @@
 source :gemcutter
 
-gem 'sinatra'
 gem 'httparty'
-gem 'json'
+
+gem 'jenkins_api_client', :require => false
 
 group :test do
-  gem 'rspec', '2.0.0'
+  gem 'rspec'
 end
