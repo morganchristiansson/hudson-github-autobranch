@@ -3,6 +3,8 @@ require './hudhub'
 
 # ARGS: <oldrev> <newrev> <refname>
 oldrev, newrev, refname = ARGV
+raise 'expected 3rd param to be refs/heads/<branchname>' unless refname
+
 branch = refname.split("refs/heads/").last
 
 Hudhub.config.base_jobs.each do |base_job_name|
