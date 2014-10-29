@@ -1,7 +1,7 @@
 require 'rubygems'
 
 require 'bundler'
-Bundler.require
+Bundler.require(:default)
 
 CONFIG_FILE = 'config.yml' unless defined?(CONFIG_FILE)
 

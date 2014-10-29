@@ -3,15 +3,15 @@ require 'spec_helper'
 describe Hudhub::Job do
 
   let(:response_200) do
-    mock('response', :code => 200)
+    double('response', code: 200)
   end
 
   before do
-    Hudhub::Job::Http.stub!(:get) { response_200 }
-    Hudhub::Job::Http.stub!(:post) { response_200 }
+    allow(Hudhub::Job::Http).to receive(:get) { response_200 }
+    allow(Hudhub::Job::Http).to receive(:post) { response_200 }
   end
 
-  let :base_job do
+  let(:base_job) do
     Hudhub::Job.new('my_project_master_rspec', <<-XML)
 <?xml version='1.0' encoding='UTF-8'?>
 <project>
@@ -76,7 +76,7 @@ describe Hudhub::Job do
 </project>
     XML
   end
-  let :job { Hudhub::Job.copy!(base_job, 'new-branch') }
+  let(:job) { Hudhub::Job.copy!(base_job, 'new-branch') }
 
   describe "#name_for_branch" do
     context "when my-project-master-rspec" do
@@ -96,7 +96,7 @@ describe Hudhub::Job do
       its(:name) { should == 'my_project_new-branch_rspec'}
       it "has the correct name" do
         xml = REXML::Document.new(subject.data)
-        REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text.should == 'origin/new-branch'
+        expect(REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text).to eq 'origin/new-branch'
       end
     end
   end
@@ -104,24 +104,25 @@ describe Hudhub::Job do
   describe "##find_or_create_copy" do
     context "when job exists" do
       it "should return the job" do
-        Hudhub::Job.should_receive(:find).with('my_project_new-branch_spec') { job }
-        Hudhub::Job.find_or_create_copy('my_project_master_spec', 'new-branch').should == job
+        expect(Hudhub::Job).to receive(:find).with('my_project_new-branch_spec') { job }
+        expect(Hudhub::Job.find_or_create_copy('my_project_master_spec', 'new-branch')).to eq job
       end
     end
     context "when job does not exists" do
       it "should create a copy" do
-        Hudhub::Job.should_receive(:find).with('my_project_new-branch_spec') { nil }
-        Hudhub::Job.should_receive(:find).with('my_project_master_spec') { base_job }
-        Hudhub::Job.should_receive(:copy!).with(base_job, 'new-branch') { job }
+        job #evaluate let block before stubs
+        expect(Hudhub::Job).to receive(:find).with('my_project_new-branch_spec') { nil }
+        expect(Hudhub::Job).to receive(:find).with('my_project_master_spec') { base_job }
+        expect(Hudhub::Job).to receive(:copy!).with(base_job, 'new-branch') { job }
 
-        Hudhub::Job.find_or_create_copy('my_project_master_spec', 'new-branch').should == job
+        expect(Hudhub::Job.find_or_create_copy('my_project_master_spec', 'new-branch')).to eq job
       end
     end
   end
 
   describe "##copy!" do
     it "should create a job based on the base one" do
-      Hudhub::Job::Http.should_receive(:post).
+      expect(Hudhub::Job::Http).to receive(:post).
         with("/createItem?name=my_project_new-branch_rspec",
              {:body=>job.data}) { response_200 }
       Hudhub::Job.copy!(base_job, 'new-branch')
@@ -132,14 +133,14 @@ describe Hudhub::Job do
       its(:name) { should == 'my_project_new-branch_rspec' }
       it "has the correct name" do
         xml = REXML::Document.new(subject.data)
-        REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text.should == 'origin/new-branch'
+        expect(REXML::XPath.first(xml, '/project/scm/branches/hudson.plugins.git.BranchSpec/name').text).to eq 'origin/new-branch'
       end
     end
   end
 
   describe "##delete!" do
     it "should delete the job" do
-      Hudhub::Job::Http.should_receive(:post).
+      expect(Hudhub::Job::Http).to receive(:post).
         with("/job/my_project_old-branch_rspec/doDelete")
       Hudhub::Job.delete!(base_job.name, 'old-branch')
     end
