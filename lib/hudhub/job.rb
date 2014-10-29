@@ -85,9 +85,9 @@ class Hudhub
       url = "/job/#{name}/build"
 
       begin
-        response = Http.get(url)
+        response = Http.post(url)
         case response.code
-        when 200
+        when 201
           true
         else
           log "Error while getting '#{url}'"
