@@ -39,7 +39,7 @@ class Hudhub
         raise AuthenticationFailed
       else
         log "Error while getting '#{url}'"
-        raise response.response
+        raise response.response.inspect
       end
     end
 
@@ -91,7 +91,7 @@ class Hudhub
           true
         else
           log "Error while getting '#{url}'"
-          raise response.response
+          raise response.response.inspect
         end
       rescue Timeout::Error
         log "Timeout... That could happen on heroku deployment. The job should be running however."
